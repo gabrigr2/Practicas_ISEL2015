@@ -26,9 +26,6 @@
 #define SECONDARY_PERIOD_1 400000000
 #define SECONDARY_PERIOD_2 800000000
 
-//Variables de tiempo
-static struct timespec start, stop, tv;
-
 //Variables compartidas
 static int acumulado = 0;
 static int puedoDevolver=0;
@@ -161,7 +158,7 @@ static int calcula_valor (fsm_t* this)
 }
 
 static void devolver (fsm_t* this){
-    int devuelto = acumulado - PRECIOCAFE;//sacar las monedas
+    //int devuelto = acumulado - PRECIOCAFE;//sacar las monedas
     //printf("Devuelto %d \n",devuelto);
     pthread_mutex_lock (&mutex_acumulado);
     acumulado=0;
