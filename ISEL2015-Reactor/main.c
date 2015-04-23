@@ -151,7 +151,7 @@ static int calcula_valor (fsm_t* this)
 }
 
 static void devolver (fsm_t* this){
-    int devuelto = acumulado - PRECIOCAFE;//sacar las monedas
+    //int devuelto = acumulado - PRECIOCAFE;//sacar las monedas
     //printf("Devuelto %d \n",devuelto);
     acumulado=0;
     

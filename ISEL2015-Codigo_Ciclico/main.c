@@ -145,7 +145,7 @@ static int calcula_valor (fsm_t* this)
 }
 
 static void devolver (fsm_t* this){
-    int devuelto = acumulado - PRECIOCAFE;//sacar las monedas
+    //int devuelto = acumulado - PRECIOCAFE;//sacar las monedas
     //printf("Devuelto %d \n",devuelto);
     acumulado=0;
     
@@ -196,7 +196,7 @@ int main (int argc, char *argv[])
 {
 
   int interperiod = 1;
-  //int timediff = 0;
+  int timediff = 0;
   int timediff_saved [12][2];
   int i,j;
   int fila = 0;
@@ -229,7 +229,7 @@ int main (int argc, char *argv[])
         //Los printf afectan a nuestro tiempo de ejecucio
 	      //asi que los comentamos
 	      //printf("CASE1: ");
-        //timediff = stop.tv_nsec-start.tv_nsec;
+        timediff = stop.tv_nsec-start.tv_nsec;
         //printf("%f \n", timediff);
 	      timediff_saved[fila][0] = stop.tv_nsec-start.tv_nsec;
 	      //fila++;
@@ -243,7 +243,7 @@ int main (int argc, char *argv[])
         //Los printf afectan a nuestro tiempo de ejecucion
 	      //asi que los comentamos
 	      //printf("CASE2: ");
-        //timediff = stop.tv_nsec-start.tv_nsec;
+        timediff = stop.tv_nsec-start.tv_nsec;
         //printf("%f \n", timediff);
 	      timediff_saved[fila][1] = stop.tv_nsec-start.tv_nsec;
 	      fila++;
