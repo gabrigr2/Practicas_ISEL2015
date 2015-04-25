@@ -6,15 +6,16 @@ int segundos;
 int minutos;
 int horas;
 
+
+int sensor;
+int flagLlegada;
+int arrayFecha[8];
+
 enum reloj {
   INICIAR,
   PINTAR,
   FINALIZAR,
 };
-
-int sensor;
-int flagLlegada;
-int arrayFecha[8];
 
 void actualizarFecha(){
 
