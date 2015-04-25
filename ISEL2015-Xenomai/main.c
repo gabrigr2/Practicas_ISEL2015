@@ -164,6 +164,7 @@ static int calcula_valor (fsm_t* this)
     pthread_mutex_lock (&mutex_puedoDevolver);
     if((puedoDevolver==1)){
         puedoDevolver=0;
+        pthread_mutex_unlock (&mutex_puedoDevolver);
         return 1;
     }
     pthread_mutex_unlock (&mutex_puedoDevolver);
@@ -198,13 +199,13 @@ void delay_until (struct timeval* next_activation)
 
 static void tarea_cafe (void* arg)
 {
-    static const struct timeval period = { 0,  SECONDARY_PERIOD_1/1000};
+    //static const struct timeval period = { 0,  SECONDARY_PERIOD_1/1000};
     fsm_fire(cofm_fsm);
 }
 
 static void tarea_monedero (void* arg)
 {
-    static const struct timeval period = {0, SECONDARY_PERIOD_2/1000 };
+    //static const struct timeval period = {0, SECONDARY_PERIOD_2/1000 };
     fsm_fire(monedero_fsm);  
 }
 
