@@ -244,7 +244,7 @@ int main (int argc, char *argv[])
 	      //asi que los comentamos
 	      //printf("CASE2: ");
         timediff = stop.tv_nsec-start.tv_nsec;
-        //printf("%f \n", timediff);
+        //printf("%d \n", timediff);
 	      timediff_saved[fila][1] = stop.tv_nsec-start.tv_nsec;
 	      fila++;
       break;

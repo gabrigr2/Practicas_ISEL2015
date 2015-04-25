@@ -5,7 +5,7 @@
 #include <wiringPi.h>
 #include "fsm.h"
 #include <stdio.h>
-#include <task.h>
+#include "tasks.h"
 
 #define GPIO_BUTTON	2
 #define GPIO_LED	3
@@ -29,6 +29,14 @@
 //Variables compartidas
 static int acumulado = 0;
 static int puedoDevolver=0;
+
+//Variables de tiempo
+static struct timespec start, stop;
+int timediff = 0;
+
+//Definicion maquinas de estado
+fsm_t* cofm_fsm;
+fsm_t* monedero_fsm;
 
 //Threads de las variables compartidas
 static pthread_mutex_t mutex_acumulado, mutex_puedoDevolver;
@@ -106,7 +114,7 @@ static void cup (fsm_t* this)
   digitalWrite (GPIO_LED, LOW);
   digitalWrite (GPIO_CUP, HIGH);
   timer_start (CUP_TIME);
-    //printf("CUP \n");
+    printf("CUP \n");
 }
 
 static void coffee (fsm_t* this)
@@ -114,7 +122,7 @@ static void coffee (fsm_t* this)
   digitalWrite (GPIO_CUP, LOW);
   digitalWrite (GPIO_COFFEE, HIGH);
   timer_start (COFFEE_TIME);
-     //printf("COFFEE \n");
+     printf("COFFEE \n");
 }
 
 static void milk (fsm_t* this)
@@ -122,14 +130,14 @@ static void milk (fsm_t* this)
   digitalWrite (GPIO_COFFEE, LOW);
   digitalWrite (GPIO_MILK, HIGH);
   timer_start (MILK_TIME);
-     //printf("MILK \n");
+     printf("MILK \n");
 }
 
 static void finish (fsm_t* this)
 {
   digitalWrite (GPIO_MILK, LOW);
   digitalWrite (GPIO_LED, HIGH);
-     //printf("FINISH \n");
+     printf("FINISH \n");
 }
 
 // Explicit FSM description
@@ -143,10 +151,14 @@ static fsm_trans_t cofm[] = {
 
 static int calcula_valor (fsm_t* this)
 {
+    clock_gettime(CLOCK_MONOTONIC, &start); 
     pthread_mutex_lock (&mutex_acumulado);
     acumulado+=moneda;
     pthread_mutex_unlock (&mutex_acumulado);
-    
+    clock_gettime(CLOCK_MONOTONIC, &stop); 
+    timediff = stop.tv_nsec-start.tv_nsec;
+    printf("%d \n", timediff);
+
     //Si ha terminado de servir el cafe pasamos a devolver
     //en caso contrario seguimos en este estado.
     pthread_mutex_lock (&mutex_puedoDevolver);
@@ -154,12 +166,15 @@ static int calcula_valor (fsm_t* this)
         puedoDevolver=0;
         return 1;
     }
-    pthread_mutex_unlock (&mutex_puedoDevolver); 
+    pthread_mutex_unlock (&mutex_puedoDevolver);
+    return 0; 
 }
 
 static void devolver (fsm_t* this){
-    //int devuelto = acumulado - PRECIOCAFE;//sacar las monedas
-    //printf("Devuelto %d \n",devuelto);
+    pthread_mutex_lock (&mutex_acumulado);
+    int devuelto = acumulado - PRECIOCAFE;//sacar las monedas
+    pthread_mutex_unlock (&mutex_acumulado);
+    printf("Devuelto %d \n",devuelto);
     pthread_mutex_lock (&mutex_acumulado);
     acumulado=0;
     pthread_mutex_unlock (&mutex_acumulado);
@@ -172,30 +187,6 @@ static fsm_trans_t monedero[] = {
   {-1, NULL, -1, NULL },
 };
 
-
-// Utility functions, should be elsewhere
-
-// res = a - b
-void
-timeval_sub (struct timeval *res, struct timeval *a, struct timeval *b)
-{
-  res->tv_sec = a->tv_sec - b->tv_sec;
-  res->tv_usec = a->tv_usec - b->tv_usec;
-  if (res->tv_usec < 0) {
-    --res->tv_sec;
-    res->tv_usec += 1000000;
-  }
-}
-
-// res = a + b
-void
-timeval_add (struct timeval *res, struct timeval *a, struct timeval *b)
-{
-  res->tv_sec = a->tv_sec + b->tv_sec
-    + a->tv_usec / 1000000 + b->tv_usec / 1000000; 
-  res->tv_usec = a->tv_usec % 1000000 + b->tv_usec % 1000000;
-}
-
 // wait until next_activation (absolute time)
 void delay_until (struct timeval* next_activation)
 {
@@ -205,66 +196,47 @@ void delay_until (struct timeval* next_activation)
   select (0, NULL, NULL, NULL, &timeout);
 }
 
-static void * tarea_cafe (void* arg)
+static void tarea_cafe (void* arg)
 {
-  struct timeval next_activation;
-  struct timeval now, timeout;
-  gettimeofday (&next_activation, NULL);
-  while (1) 
-  {
-    struct timeval *period = task_get_period (pthread_self());
-    timeval_add (&next_activation, &next_activation, period);
-    gettimeofday (&now, NULL);
-    timeval_sub (&timeout, &next_activation, &now);
-    select (0, NULL, NULL, NULL, &timeout) ;
-
+    static const struct timeval period = { 0,  SECONDARY_PERIOD_1/1000};
     fsm_fire(cofm_fsm);
-  }  
 }
 
-static void * tarea_monedero (void* arg)
+static void tarea_monedero (void* arg)
 {
-
-  struct timeval next_activation;
-  struct timeval now, timeout;
-  gettimeofday (&next_activation, NULL);
-  while (1) 
-  {
-    struct timeval *period = task_get_period (pthread_self());
-    timeval_add (&next_activation, &next_activation, period);
-    gettimeofday (&now, NULL);
-    timeval_sub (&timeout, &next_activation, &now);
-    select (0, NULL, NULL, NULL, &timeout) ;
-
-    fsm_fire(monfm_fsm);
-  }
-  
+    static const struct timeval period = {0, SECONDARY_PERIOD_2/1000 };
+    fsm_fire(monedero_fsm);  
 }
 
 int main ()
 {
 
-  struct timeval clk_period = { 0, 250 * 1000 };
-  struct timeval next_activation;
-  fsm_t* cofm_fsm = fsm_new (cofm);
-  fsm_t* monedero_fsm = fsm_new (monedero);
+  pthread_t tcafe;
+  pthread_t tmonedero;
 
   wiringPiSetup();
-
-  gettimeofday (&next_activation, NULL);
 
   init_mutex (&mutex_acumulado, 2);
   init_mutex (&mutex_puedoDevolver, 2);
 
-  pthread_t tcafe = task_new ("tarea_cafe", tarea_cafe, SECONDARY_PERIOD_1, SECONDARY_PERIOD_1, 2, 1024);
-  pthread_t tmonedero = task_new ("tarea_monedero", tarea_monedero, SECONDARY_PERIOD_2, SECONDARY_PERIOD_2, 1, 1024);
+  pinMode (GPIO_COFFEE, OUTPUT);
+  pinMode (GPIO_MILK, OUTPUT);
+  pinMode (GPIO_LED, OUTPUT);
+  digitalWrite (GPIO_LED, HIGH);
   
+  cofm_fsm = fsm_new (cofm);
+  monedero_fsm = fsm_new (monedero);
+
   //Mientras tengamos 3 dastos en el fichero de inputs
   while (scanf("%d %d %d", &button, &moneda, &timer)==3) {
    
-    timeval_add (&next_activation, &next_activation, &clk_period);
-    delay_until (&next_activation);
-  }
+    clock_gettime(CLOCK_REALTIME, &start);
+    create_task (&tcafe, tarea_cafe, NULL, SECONDARY_PERIOD_1/1000, 2, 1024);
+    create_task (&tmonedero, tarea_monedero, NULL, SECONDARY_PERIOD_2/1000, 1, 1024);
+    clock_gettime(CLOCK_REALTIME, &stop);
+    timediff = stop.tv_nsec - start.tv_nsec;
+    printf("%d \n",timediff);
+    }
 
   return 0;
 }
