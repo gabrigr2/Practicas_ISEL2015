@@ -2,6 +2,7 @@
 
 Práctica2: Reloj
 Autor: Gabriel García Ramos
+
 /*
 A partir de la máquina de cafe de la practica 1, he optado por elegir la máquina de estados de la cafetera con un periodo de 0,4 segundos y la máquina de estados del monedero con un periodo de 0,8 segundos. Me parece más lógico dar prioridad al servicio del café frente al de las monedas ya que en caso de que no se introduzca correctamente el usuario puede volver a introducirla sin ningún esfuerzo.
 
