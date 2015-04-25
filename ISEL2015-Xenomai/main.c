@@ -77,8 +77,10 @@ static int button_pressed (fsm_t* this)
     button=0;
     pthread_mutex_lock (&mutex_puedoDevolver);
     puedoDevolver=0;
-    pthread_mutex_unlock (&mutex_acumulado);
+    pthread_mutex_unlock (&mutex_puedoDevolver);
 
+
+    pthread_mutex_lock (&mutex_acumulado);
     //Si acumulado es suficiente cambia de estado
     if((acumulado >= PRECIOCAFE)&&(ret == 1)){
       ret = 1;
@@ -87,7 +89,8 @@ static int button_pressed (fsm_t* this)
       pthread_mutex_unlock (&mutex_puedoDevolver);
     }else{
       ret = 0;
-    } 
+    }
+    pthread_mutex_unlock (&mutex_acumulado); 
   return ret;
 }
 
@@ -146,15 +149,12 @@ static int calcula_valor (fsm_t* this)
     
     //Si ha terminado de servir el cafe pasamos a devolver
     //en caso contrario seguimos en este estado.
+    pthread_mutex_lock (&mutex_puedoDevolver);
     if((puedoDevolver==1)){
-        pthread_mutex_lock (&mutex_puedoDevolver);
         puedoDevolver=0;
-        pthread_mutex_unlock (&mutex_puedoDevolver);
-
         return 1;
-    }else{
-      return 0;
-    }    
+    }
+    pthread_mutex_unlock (&mutex_puedoDevolver); 
 }
 
 static void devolver (fsm_t* this){
