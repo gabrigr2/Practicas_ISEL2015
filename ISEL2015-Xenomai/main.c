@@ -83,22 +83,33 @@ static int button_pressed (fsm_t* this)
 {
   int ret = button;
     button=0;
+    clock_gettime(CLOCK_REALTIME, &start);
     pthread_mutex_lock (&mutex_puedoDevolver);
     puedoDevolver=0;
     pthread_mutex_unlock (&mutex_puedoDevolver);
+    clock_gettime(CLOCK_REALTIME, &stop);
+    timediff = stop.tv_nsec - start.tv_nsec;
+    printf("Lock puedoDevolver %d ns \n", timediff);
 
-
+    clock_gettime(CLOCK_REALTIME, &start);
     pthread_mutex_lock (&mutex_acumulado);
     //Si acumulado es suficiente cambia de estado
     if((acumulado >= PRECIOCAFE)&&(ret == 1)){
       ret = 1;
+      clock_gettime(CLOCK_REALTIME, &start);
       pthread_mutex_lock (&mutex_puedoDevolver);
       puedoDevolver=1; //Devuelve dinero una vez el boton ha sido pulsado y tenemos dinero suficiente
       pthread_mutex_unlock (&mutex_puedoDevolver);
+      clock_gettime(CLOCK_REALTIME, &stop);
+      timediff = stop.tv_nsec - start.tv_nsec;
+      printf("Lock puedoDevolver %d ns \n", timediff);
     }else{
       ret = 0;
     }
-    pthread_mutex_unlock (&mutex_acumulado); 
+    pthread_mutex_unlock (&mutex_acumulado);
+    clock_gettime(CLOCK_REALTIME, &stop); 
+    timediff = stop.tv_nsec - start.tv_nsec;
+    printf("Lock acumulado %d ns \n", timediff);
   return ret;
 }
 
@@ -157,28 +168,45 @@ static int calcula_valor (fsm_t* this)
     pthread_mutex_unlock (&mutex_acumulado);
     clock_gettime(CLOCK_MONOTONIC, &stop); 
     timediff = stop.tv_nsec-start.tv_nsec;
-    printf("%d \n", timediff);
+    printf("Lock acumulado %d ns \n", timediff);
 
     //Si ha terminado de servir el cafe pasamos a devolver
     //en caso contrario seguimos en este estado.
+    clock_gettime(CLOCK_MONOTONIC, &start);
     pthread_mutex_lock (&mutex_puedoDevolver);
     if((puedoDevolver==1)){
         puedoDevolver=0;
         pthread_mutex_unlock (&mutex_puedoDevolver);
+        clock_gettime(CLOCK_MONOTONIC, &stop);
+        timediff = stop.tv_nsec-start.tv_nsec;
+        printf("Lock puedoDevolver %d ns \n", timediff);
         return 1;
     }
     pthread_mutex_unlock (&mutex_puedoDevolver);
+    clock_gettime(CLOCK_MONOTONIC, &stop);
+    timediff = stop.tv_nsec-start.tv_nsec;
+    printf("Lock puedoDevolver %d ns \n", timediff);
     return 0; 
 }
 
 static void devolver (fsm_t* this){
+    clock_gettime(CLOCK_MONOTONIC, &start);
     pthread_mutex_lock (&mutex_acumulado);
     int devuelto = acumulado - PRECIOCAFE;//sacar las monedas
     pthread_mutex_unlock (&mutex_acumulado);
+    clock_gettime(CLOCK_MONOTONIC, &stop);
+    timediff = stop.tv_nsec-start.tv_nsec;
+    printf("Lock acumulado %d ns \n", timediff);
+
     printf("Devuelto %d \n",devuelto);
+
+    clock_gettime(CLOCK_MONOTONIC, &start);
     pthread_mutex_lock (&mutex_acumulado);
     acumulado=0;
     pthread_mutex_unlock (&mutex_acumulado);
+    clock_gettime(CLOCK_MONOTONIC, &stop);
+    timediff = stop.tv_nsec-start.tv_nsec;
+    printf("Lock acumulado %d ns \n", timediff);
 
 }
 
@@ -199,14 +227,20 @@ void delay_until (struct timeval* next_activation)
 
 static void tarea_cafe (void* arg)
 {
-    //static const struct timeval period = { 0,  SECONDARY_PERIOD_1/1000};
-    fsm_fire(cofm_fsm);
+    //clock_gettime(CLOCK_REALTIME, &start);
+    fsm_fire (cofm_fsm);
+    //clock_gettime(CLOCK_REALTIME, &stop);
+    //timediff = (end.tv_nsec - start.tv_nsec);
+    //printf("Ejecucion de maquina cafe %d ns \n", timediff);  
 }
 
 static void tarea_monedero (void* arg)
 {
-    //static const struct timeval period = {0, SECONDARY_PERIOD_2/1000 };
-    fsm_fire(monedero_fsm);  
+    //clock_gettime(CLOCK_REALTIME, &start);
+    fsm_fire (monedero_fsm);
+    //clock_gettime(CLOCK_REALTIME, &stop);
+    //timediff = (end.tv_nsec - start.tv_nsec);
+    //printf("Ejecucion de maquina monedero %d ns \n", timediff);  
 }
 
 int main ()
@@ -236,7 +270,7 @@ int main ()
     create_task (&tmonedero, tarea_monedero, NULL, SECONDARY_PERIOD_2/1000, 1, 1024);
     clock_gettime(CLOCK_REALTIME, &stop);
     timediff = stop.tv_nsec - start.tv_nsec;
-    printf("%d \n",timediff);
+    printf("Tiempo de ejecucion %d ns \n",timediff);
     }
 
   return 0;

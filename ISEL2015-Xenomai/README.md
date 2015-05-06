@@ -1,14 +1,10 @@
-# ISEL2015-Codigo_ciclico
+# ISEL2015-Xenomai
 
-Práctica2: Codigo Ciclico
+Práctica3: Xenomai
 Autor: Gabriel García Ramos
 
-A partir de la máquina de cafe de la practica 1, he optado por elegir la máquina de estados de la cafetera con un periodo de 0,4 segundos y la máquina de estados del monedero con un periodo de 0,8 segundos. 
+Para esta práctica optamos por implementar en programa basándonos en pthreads. Esto es, que a cada máquina de estados le asignamos un thread o hebra con una prioridad. Para seguir siendo coherentes con las prácticas anteriores hacemos que la prioridad de la hebra de la máquina de cafe sea mayor que la hebra de la máquina monedero. Además también seguiremos utilizando los tiempos que usábamos en el ejecutivo cíclico: 0,4 s para el café y 0,8 s para el monedero. 
 
-Con esto tenemos un hiperperiodo de 0,8 segundos (minimo comun multimplo de los periodos citados anteriormente) y un periodo secundario de 0,4 segundos (maximo comun divisor de los periodos citados anteriormente).
-
-Sabiendo esto, implementamos una estructura switch en el metodo main() en la que para el caso1 hacemos un fire a ambas maquinas de estados y para el caso2 solo para la maquina de estados de la cafetera. 
-
-Con la ayuda del metodo clock_gettime(), introduciendo una llamada al metodo antes y otra despues de los disparos a las maquinas de estados podemos medir el tiempo que pasamos ejecutando calculando la diferencia de las llamadas a clock _gettime(). Despues, mediante una sencilla resta al periodo secundario de esta diferencia de las llamadas resultante, obtenemos el tiempo que debemos esperar para que seguro se produzca la siguiente ejecucion correctamente.
+Estas hebrás accederán a variables de nustro programa para modificarlas y en algunos casos accederán a variables globales compartidas entre ambas máquinas. Haciendo uso de muttex, cada vez que accedamos a una variable compartida la bloquearemos para que así no pueda acceder la otra hebra y se produzcan escrituras a destiempo que provoquen solapamientos y malentendidos.
 
 
