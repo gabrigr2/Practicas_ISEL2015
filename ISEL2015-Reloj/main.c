@@ -56,80 +56,80 @@ void actualizarHora(){
 static void numeros(char c){
     switch(c){
         case '0':
-            printf("11111111\n");
-            printf("10000001\n");
-            printf("11111111\n");
-            printf("00000000\n");
+            printf("1 1 1 1 1 1 1 1\n");
+            printf("1 0 0 0 0 0 0 1\n");
+            printf("1 1 1 1 1 1 1 1\n");
+            printf("0 0 0 0 0 0 0 0\n");
         break;
         
         case '1':
-            printf("00000100\n");
-            printf("00000010\n");
-            printf("11111111\n");
-            printf("00000000\n");
+            printf("0 0 0 0 0 1 0 0\n");
+            printf("0 0 0 0 0 0 1 0\n");
+            printf("1 1 1 1 1 1 1 1\n");
+            printf("0 0 0 0 0 0 0 0\n");
         break;
         
         case '2':
-            printf("11111001\n");
-            printf("10001001\n");
-            printf("10001111\n");
-            printf("00000000\n");
+            printf("1 1 1 1 1 0 0 1\n");
+            printf("1 0 0 0 1 0 0 1\n");
+            printf("1 0 0 0 1 1 1 1\n");
+            printf("0 0 0 0 0 0 0 0\n");
         break;
         
         case '3':
-            printf("10001001\n");
-            printf("10001001\n");
-            printf("11111111\n");
-            printf("00000000\n");
+            printf("1 0 0 0 1 0 0 1\n");
+            printf("1 0 0 0 1 0 0 1\n");
+            printf("1 1 1 1 1 1 1 1\n");
+            printf("0 0 0 0 0 0 0 0\n");
         break;
         
         case '4':
-            printf("00001111\n");
-            printf("00001001\n");
-            printf("11111111\n");
-            printf("00000000\n");
+            printf("0 0 0 0 1 1 1 1\n");
+            printf("0 0 0 0 1 0 0 0\n");
+            printf("1 1 1 1 1 1 1 1\n");
+            printf("0 0 0 0 0 0 0 0\n");
         break;
         
         case '5':
-            printf("10001111\n");
-            printf("10001001\n");
-            printf("11111001\n");
-            printf("00000000\n");
+            printf("1 0 0 0 1 1 1 1\n");
+            printf("1 0 0 0 1 0 0 1\n");
+            printf("1 1 1 1 1 0 0 1\n");
+            printf("0 0 0 0 0 0 0 0\n");
         break;
             
         case '6':
-            printf("11111111\n");
-            printf("10001000\n");
-            printf("11111000\n");
-            printf("00000000\n");
+            printf("1 1 1 1 1 1 1 1\n");
+            printf("1 0 0 0 1 0 0 1\n");
+            printf("1 1 1 1 1 0 0 1\n");
+            printf("0 0 0 0 0 0 0 0\n");
         break;
         
         case '7':
-            printf("00000001\n");
-            printf("00000001\n");
-            printf("11111111\n");
-            printf("00000000\n");
+            printf("0 0 0 0 0 0 0 1\n");
+            printf("0 0 0 0 0 0 0 1\n");
+            printf("1 1 1 1 1 1 1 1\n");
+            printf("0 0 0 0 0 0 0 0\n");
         break;
         
         case '8':
-            printf("11111111\n");
-            printf("10001001\n");
-            printf("11111111\n");
-            printf("00000000\n");
+            printf("1 1 1 1 1 1 1 1\n");
+            printf("1 0 0 0 1 0 0 1\n");
+            printf("1 1 1 1 1 1 1 1\n");
+            printf("0 0 0 0 0 0 0 0\n");
         break;
         
         case '9':
-            printf("00001111\n");
-            printf("00001001\n");
-            printf("11111111\n");
-            printf("00000000\n");
+            printf("1 0 0 0 1 1 1 1\n");
+            printf("1 0 0 0 1 0 0 1\n");
+            printf("1 1 1 1 1 1 1 1\n");
+            printf("0 0 0 0 0 0 0 0\n");
         break;
         
         default:
             clock_gettime(CLOCK_REALTIME, &start);
-            printf("10000001\n");
+            printf("0 0 1 0 0 1 0 0\n");
             clock_gettime(CLOCK_REALTIME, &stop);
-            printf("00000000\n");
+            printf("0 0 0 0 0 0 0 0\n");
             //tmp[cnt]=( stop.tv_nsec - start.tv_nsec );
             //cnt++;
         break;
@@ -165,8 +165,7 @@ static void pintar ()
                 fflush(stdout);
         }
 
-        //Dejamos 2 espacios de separacion para que se vea mejor cada representacion
-        printf("\n");
+        //Dejamos 1 espacio de separacion para que se vea mejor cada representacion
         printf("\n");
 
         //Pintamos la hora con 0 y 1 simulando LEDs de los GPIOs
