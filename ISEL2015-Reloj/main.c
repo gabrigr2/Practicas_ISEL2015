@@ -2,40 +2,139 @@
 #include <time.h>
 #include "fsm.h"
 
-int segundos;
-int minutos;
+
+//Variables para guardar la hora
 int horas;
+int minutos;
+int segundos;
+int hora[8];
 
+//Variables para medida de tiempos
+static struct timespec start,stop;
 
+//Señales entrada de los sensores
 int sensor;
-int flagLlegada;
-int arrayFecha[8];
+int llegada;
 
-enum reloj {
-  INICIAR,
-  PINTAR,
-  FINALIZAR,
+int i;
+
+/*
+//Variables para mostrar los resultados
+int tmp[24];
+int tmp2[24];
+int cnt =0;
+int cnt2 =0;
+*/
+
+enum estados {
+  START,
+  PAINT,
 };
 
-void actualizarFecha(){
+void actualizarHora(){
 
-        time_t fechaOrigen = time(NULL); //epoch 00:00 del 1 de enero de 1970 cuenta los segundos desde entonces.
+        time_t tInicial = time(NULL); //epoch 00:00 del 1 de enero de 1970 cuenta los segundos desde entonces.
 
-        struct tm fecha = *localtime(&fechaOrigen); // Seprara minutos horas etc..
+        struct tm tiempo = *localtime(&tInicial); // Separa minutos horas etc..
 
-        segundos = fecha.tm_sec;
-        minutos = fecha.tm_min;
-        horas = fecha.tm_hour;
+        horas = tiempo.tm_hour;
+        minutos = tiempo.tm_min;
+        segundos = tiempo.tm_sec;
+        
 
-        arrayFecha[0] = '0' + horas/10;
-        arrayFecha[1] = '0' + horas%10;
-        arrayFecha[2] = ':';
-        arrayFecha[3] = '0' + minutos/10;
-        arrayFecha[4] = '0' + minutos%10;
-        arrayFecha[5] = ':';
-        arrayFecha[6] = '0' + segundos/10;
-        arrayFecha[7] = '0' + segundos%10;
+        hora[0] = '0' + horas/10;
+        hora[1] = '0' + horas%10;
+        hora[2] = ':';
+        hora[3] = '0' + minutos/10;
+        hora[4] = '0' + minutos%10;
+        hora[5] = ':';
+        hora[6] = '0' + segundos/10;
+        hora[7] = '0' + segundos%10;
 
+}
+
+static void numeros(char c){
+    switch(c){
+        case '0':
+            printf("11111111\n");
+            printf("10000001\n");
+            printf("11111111\n");
+            printf("00000000\n");
+        break;
+        
+        case '1':
+            printf("00000100\n");
+            printf("00000010\n");
+            printf("11111111\n");
+            printf("00000000\n");
+        break;
+        
+        case '2':
+            printf("11111001\n");
+            printf("10001001\n");
+            printf("10001111\n");
+            printf("00000000\n");
+        break;
+        
+        case '3':
+            printf("10001001\n");
+            printf("10001001\n");
+            printf("11111111\n");
+            printf("00000000\n");
+        break;
+        
+        case '4':
+            printf("00001111\n");
+            printf("00001001\n");
+            printf("11111111\n");
+            printf("00000000\n");
+        break;
+        
+        case '5':
+            printf("10001111\n");
+            printf("10001001\n");
+            printf("11111001\n");
+            printf("00000000\n");
+        break;
+            
+        case '6':
+            printf("11111111\n");
+            printf("10001000\n");
+            printf("11111000\n");
+            printf("00000000\n");
+        break;
+        
+        case '7':
+            printf("00000001\n");
+            printf("00000001\n");
+            printf("11111111\n");
+            printf("00000000\n");
+        break;
+        
+        case '8':
+            printf("11111111\n");
+            printf("10001001\n");
+            printf("11111111\n");
+            printf("00000000\n");
+        break;
+        
+        case '9':
+            printf("00001111\n");
+            printf("00001001\n");
+            printf("11111111\n");
+            printf("00000000\n");
+        break;
+        
+        default:
+            clock_gettime(CLOCK_REALTIME, &start);
+            printf("10000001\n");
+            clock_gettime(CLOCK_REALTIME, &stop);
+            printf("00000000\n");
+            //tmp[cnt]=( stop.tv_nsec - start.tv_nsec );
+            //cnt++;
+        break;
+    }
+ 
 }
 
 static int sensorSalida ()
@@ -48,33 +147,43 @@ static int sensorSalida ()
 }
 static void espera ()
 {
-        struct timespec tiempoEspera = {0, 500000000};
-        nanosleep(&tiempoEspera, NULL);
+        struct timespec tEspera = {0, 65000000};
+        nanosleep(&tEspera, NULL);
 
 }
 
-static void pinta ()
+static void pintar ()
 {
-        int i;
-        char n;
-        //struct timespec tiempoEspera = {0, 500000000};
-        actualizarFecha();
+        char c;
 
+        actualizarHora();
+
+        //Pintamos la hora de forma visible
         for(i=0; i<8; i++){
                 espera();
-                n = arrayFecha[i];
-                printf("%c", n);
+                printf("%c", hora[i]);
                 fflush(stdout);
         }
 
-        flagLlegada = 1;
+        //Dejamos 2 espacios de separacion para que se vea mejor cada representacion
+        printf("\n");
+        printf("\n");
+
+        //Pintamos la hora con 0 y 1 simulando LEDs de los GPIOs
+        for(i=0; i<8; i++){
+                espera();
+                c = hora[i];                
+                numeros(c);
+        }
+
+        llegada = 1;
 
 }
 
 static int sensorLlegada ()
 {
-        if (flagLlegada == 1){
-                flagLlegada = 0;
+        if (llegada == 1){
+                llegada = 0;
                 return 1;
         } else{
                 return 0;
@@ -88,8 +197,8 @@ static void fin ()
 }
 
 static fsm_trans_t reloj[] = {
-  { INICIAR, sensorSalida, PINTAR,     pinta    },
-  { PINTAR,  sensorLlegada, INICIAR,    fin   },
+  { START, sensorSalida, PAINT, pintar },
+  { PAINT,  sensorLlegada, START, fin },
   {-1, NULL, -1, NULL },
 };
 
@@ -97,7 +206,18 @@ int main (){
         fsm_t* reloj_fsm = fsm_new(reloj);
 
         while(scanf("%d", &sensor)==1){
-                fsm_fire(reloj_fsm);
-        }
+            clock_gettime(CLOCK_REALTIME, &start);
+            fsm_fire(reloj_fsm); 
+            clock_gettime(CLOCK_REALTIME, &stop);
+            //tmp2[cnt2]=( stop.tv_nsec - start.tv_nsec );
+            //cnt2++;
+        }   
+
+        /*for(i=0;i<24; i++){
+                printf("%d ",tmp[i]);
+                printf("%d ",tmp2[i]);
+                printf("\n");
+        }*/
+
 return 0;
 }
